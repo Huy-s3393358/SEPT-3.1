@@ -1,0 +1,115 @@
+﻿@model PagedList.IPagedList<OnlineBookingSystem.ViewModel.BookingViewModel>
+@using PagedList.Mvc;
+<table class="table table-bordred table-striped" style="width:100%">
+    <thead>
+        <tr>
+            <th>
+                Action
+            </th>
+            <th>
+                Room Type
+            </th>
+            <th>
+                Room Number
+            </th>
+            <th>
+                Date
+            </th>
+            <th>
+                Hours
+            </th>
+            <th>
+                Room Capacity
+            </th>
+            <th>
+                Room Price
+            </th>
+            <th>
+                Room Description
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            foreach (SelectListItem BookingHours in item.ListBookingHours)
+            {
+                if ((@item.RoomBookeds.FindAll(x => x.Value == @BookingHours.Value)).Count > 0 && (@item.RoomBookeds.FindAll(x => x.Text == item.BookingDate.ToString("dd-MMM-yyyy"))).Count > 0)
+                {
+                    <tr class="Success">
+                        <td>
+                            <button type="button" disabled class="btn btn-danger" data-toggle="modal" data-target="#divBooked">Booked</button>
+                        </td>
+                        <td>
+                            @item.RoomType
+                        </td>
+                        <td>
+                            @item.RoomNumber
+                        </td>
+                        <td>
+                            @item.BookingDate.ToString("dd-MMM-yyyy")
+                        </td>
+                        <td>
+                            @BookingHours.Text
+                        </td>
+                        <td>
+                            @item.RoomCapacity
+                        </td>
+                        @if (item.RoomPrice != 0)
+                        {
+                            <td> @item.RoomPrice </td>
+                        }
+                        else
+                        {
+                            <td> Free </td>
+                        }
+                        <td>
+                            @item.RoomDescription
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr class="active">
+                        <td>
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#divNewBooking" onclick="CreateBooking(@item.RoomId,@BookingHours.Value)">New Booking</button>
+                        </td>
+                        <td>
+                            @item.RoomType
+                        </td>
+                        <td>
+                            @item.RoomNumber
+                        </td>
+                        <td>
+                            @item.BookingDate.ToString("dd-MMM-yyyy")
+                        </td>
+                        <td>
+                            @BookingHours.Text
+                        </td>
+                        <td>
+                            @item.RoomCapacity
+                        </td>
+                        @if (item.RoomPrice != 0)
+                        {
+                            <td> @item.RoomPrice </td>
+                        }
+                        else
+                        {
+                            <td> Free </td>
+                        }
+                        <td>
+                            @item.RoomDescription
+                        </td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+
+</table>
+@{
+    if (Model.PageCount > 1)
+    {
+        <div class="container col-md-12" style="text-align:right">@Html.PagedListPager(Model, page => Url.Action("Index", new { page, RoomSearch = ViewBag.RoomSearch, RoomTypeSearch = ViewBag.RoomTypeSearch, BookingDate = ViewBag.BookingDate, pageSize = ViewBag.PageSize }))</div>
+    }
+}

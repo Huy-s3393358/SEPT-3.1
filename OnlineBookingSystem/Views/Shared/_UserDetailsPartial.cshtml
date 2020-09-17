@@ -1,0 +1,47 @@
+﻿@model PagedList.IPagedList<OnlineBookingSystem.ViewModel.UserDetailsViewModel>
+@using PagedList.Mvc;
+<table class="table table-bordred table-striped" style="width:100%">
+    <thead>
+        <tr>
+            <th>
+                Action
+            </th>
+            <th>
+                Full Name
+            </th>
+            <th>
+                User Name
+            </th>
+            <th>
+                Email
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <span id="btnDelete" class="glyphicon glyphicon-trash" onclick="DeleteUser(@item.Id)"></span> &nbsp;&nbsp;
+                    <span id="btnEdit" class="glyphicon glyphicon-pencil" onclick="EditUser(@item.Id)"></span> &nbsp;&nbsp;
+                </td>
+                <td>
+                    @item.FullName
+                </td>
+                <td>
+                    @item.UserName
+                </td>
+                <td>
+                    @item.Email
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+@{
+    if (Model.PageCount > 1)
+    {
+        <div class="container col-md-12" style="text-align:right">@Html.PagedListPager(Model, page => Url.Action("Index", new { page, search = ViewBag.SearchPage, pageSize = ViewBag.PageSize }))</div>
+    }
+}

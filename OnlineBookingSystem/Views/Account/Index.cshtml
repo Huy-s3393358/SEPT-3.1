@@ -1,0 +1,328 @@
+﻿@model OnlineBookingSystem.ViewModel.UserViewModel
+@{
+    ViewBag.Title = "Index";
+}
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    var _webroot = '@System.Configuration.ConfigurationManager.AppSettings["webpath"].ToString()';
+    $(document).ready(function () {
+        // when user click on "CREATE USERS" module, system will call SearchUsersByName function to search
+        // system will search with NameSearch is empty and load all User Name.
+        SearchUsersByName();
+        // when user click on enter value for Enter Name field and click on Search button
+        // system will load all user base on value user enter.
+        $("#btnSearch").click(function () {
+            $("#txtPage").val("1");
+            SearchUsersByName();
+        });
+
+        // first load, system will get value Id is zero
+        // The purpose is that when post to Index AccountController
+        // system will check the condition if ID is zero, the system will create a new user
+        // otherwise ID is non-zero, the system will update the user based on Id
+        $("#txtUserId").val("0");
+        $("#btnCreate").click(function () {
+            ResetUserInformation();
+        });
+
+        $("#btnSave").click(function () {
+            //password
+            var passWord = true;
+            var vPassword = $("#txtPassWord").val() == undefined ? 0 : $("#txtPassWord").val().trim().length;
+            var vrePassword = $("#txtRePassWord").val() == undefined ? 0 : $("#txtPassWord").val().trim().length;
+            if ($("#btnSave").text() == "Update" && vPassword == 0 && vrePassword == 0) {
+                $("#txtPassWord").rules("remove", "required");
+            }
+            else {
+                $("#txtPassWord").rules("add", "required");
+            }
+            if (!$("#formUser").valid()) {
+                return;
+            }
+            validateUserExits();
+        });
+
+
+    });
+
+    //items per page
+    function ChagePaging() {
+        $("#txtPage").val("1");
+        SearchUsersByName();
+    }
+
+    function SearchUsersByName() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("NameSearch", $("#txtNameSearch").val());
+        formData.append("Page", $("#txtPage").val());
+        formData.append("PageSize", $("#ddPerpages").val());
+        $.ajax({
+            async: true,
+            type: 'POST',
+            url: _webroot + '/Account/GetAllUsers',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                $("#divLoadUserDetails").html(data);
+            },
+            error: function () {
+                alert('There is some problem to process your request. Please try after sometime.');
+            }
+        });
+    }
+
+    //Save User
+    function SaveUserData() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("Id", $("#txtUserId").val());
+        formData.append("RoleId", $("#ddRoleId").val());
+        formData.append("UserName", $("#txtUserName").val());
+        var vPassword = $("#txtPassWord").val() == undefined ? "" : $("#txtPassWord").val().trim();
+        formData.append("PassWord", vPassword);
+        formData.append("FullName", $("#txtFullName").val());
+        formData.append("Email", $("#txtEmail").val());
+
+        formData.append("PhoneNumber", $("#txtPhoneNumber").val());
+        //formData.append("About", $("#txtAbout").val());
+        formData.append("Image", $("#UploadImage").get(0).files[0]);
+
+        $.ajax({
+            async: true,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                    if (data.success === true) {
+                        alert(data.message);
+                        ResetUserInformation();
+                        SearchUsersByName();
+                    }
+
+                },
+            error: function () {
+                    alert('There is some problem to process your request. Please try after sometime.');
+                }
+            });
+    }
+    //Edit User
+    function EditUser(UserId) {
+        $.ajax({
+            async: true,
+            type: 'GET',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: { UserId: UserId },
+            url: _webroot + '/Account/EditUserDetails',
+            success: function (data) {
+                $("#ddRoleId").val(data.RoleId);
+                $("#txtUserName").val(data.UserName);
+                $("#txtFullName").val(data.FullName);
+                $("#txtPassWord").val('');
+                $("#txtRePassWord").val('');
+                $("#txtEmail").val(data.Email);
+                $("#divAddUser").modal({ show: true });
+                $("#btnSave").text("Update");
+                $("#txtUserId").val(data.Id);
+                $("#txtPhoneNumber").val(data.PhoneNumber);
+                //$("#txtAbout").val(data.About);
+                $("#imgUser").attr('src', "../UserImages/" + data.UserImage);
+                },
+            error: function () {
+                    alert('There is some proplem to process your request. Please try after sometime.')
+            }
+        });
+    }
+    //Delete User
+    function DeleteUser(UserId) {
+        //show warning
+        var result = confirm("Are you sure you want to delete?");
+        if (result === false) {
+            return false;
+        }
+        $.ajax({
+            async: true,
+            type: 'GET',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: { UserId: UserId },
+            url: _webroot + '/Account/DeleteUserDetails',
+            success: function (data) {
+                    if (data.success === true) {
+                        alert(data.message);
+                        SearchUsersByName();
+                    }
+                },
+            error: function () {
+                    alert('There is some proplem to process your request. Please try after sometime.')
+            }
+        });
+    }
+    function validateUserExits() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("Id", $("#txtUserId").val());
+        formData.append("UserName", $("#txtUserName").val());
+        $.ajax({
+            async: true,
+            type: 'POST',
+            url: _webroot + '/Account/UserNameExists',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                if (data == true) {
+                    SaveUserData();
+                }
+                else {
+                    return alert("User Name already exists.");
+                }
+            },
+            error: function () {
+                return alert('There is some proplem to process your request. Please try after sometime.');
+            }
+        });
+    }
+    //show Image in UI
+    function DisplayImage(result) {
+        if (result.files && result.files[0]) {
+            var filereader = new FileReader;
+            filereader.onload = function (e) {
+                $("#imgUser").attr('src', e.target.result);
+            }
+            filereader.readAsDataURL(result.files[0]);
+        }
+
+    }
+
+    //Reset all infor for User form
+    function ResetUserInformation() {
+        $("#ddRoleId").val(1);
+        $("#txtUserName").val('')
+        $("#txtPassWord").val('');
+        $("#txtFullName").val('');
+        $("#txtRePassWord").val('');
+        $("#txtEmail").val('');
+        $("#btnSave").text("Save")
+        $("#txtUserId").val(0);
+        $("#txtPhoneNumber").val('');
+        //$("#txtAbout").val('');
+        $("#imgUser").attr('src', "");
+        $("#UploadImage").val('');
+    }
+</script>
+<div>
+    <div style="margin-top: 30px"></div>
+    <h2 style="font-size:25px">CREATE USERS</h2>
+    <form id="formCreateNew">
+        <button type="button" id="btnCreate" class="btn btn-primary" data-toggle="modal" data-target="#divAddUser">Create New User</button>
+    </form>
+    <div style="margin-top: 20px"></div>
+</div>
+<form id="formUser">
+    <div id="divAddUser" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">User</h4>
+                </div>
+                <div class="modal-body col-md-12">
+                    <div class="container col-md-12">
+                        @Html.HiddenFor(model => model.Id, new { @id = "txtUserId" })
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RoleId)
+                           @Html.DropDownListFor(model => model.RoleId, Model.ListOfRole, new { @class = "form-control", id = "ddRoleId", @title = "Please select an access level for this user." })                       
+                        </div>
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.UserName)
+                            @Html.TextBoxFor(model => model.UserName, new { @class = "form-control", id = "txtUserName", @title = "Please enter a unique 2-16 characters username without any space." })
+                           @Html.ValidationMessageFor(model => model.UserName, null, new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="container col-md-12">
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.PassWord)
+                            @Html.PasswordFor(model => model.PassWord, new { @class = "form-control", id = "txtPassWord", @title = "Please enter a 3-10 character password." })
+                                                      @Html.ValidationMessageFor(model => model.PassWord, null, new { @class = "text-danger" })
+                        </div>
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RePassWord)
+                            @Html.PasswordFor(model => model.RePassWord, new { @class = "form-control", id = "txtRePassWord", @title = "Please enter Re-enter Password match with Password." })
+                                                      @Html.ValidationMessageFor(model => model.RePassWord, null, new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="container col-md-12">
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.FullName)
+                            @Html.TextBoxFor(model => model.FullName, new { @class = "form-control", id = "txtFullName", @title = "Please enter the user's full name in the format First name <space> Last name" })
+                            @Html.ValidationMessageFor(model => model.FullName, null, new { @class = "text-danger" })
+                        </div>
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.Email)
+                           @Html.TextBoxFor(model => model.Email, new { @class = "form-control", id = "txtEmail", @title = "Please enter a valid email address." })
+                                                   @Html.ValidationMessageFor(model => model.Email, null, new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="container col-md-12">
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.PhoneNumber)
+                            @Html.TextBoxFor(model => model.PhoneNumber, new { @class = "form-control", id = "txtPhoneNumber", @title = "Please enter valid phone number." })
+                                                      @Html.ValidationMessageFor(model => model.PhoneNumber, null, new { @class = "text-danger" })
+                        </div>
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.Image)
+                            <input type="file" id="UploadImage" class="form-control" name="userImage" title="Load Image" onchange="DisplayImage(this)" />
+                            <img id="imgUser" height="100" width="100" style="border:solid" />
+                        </div>
+                    </div>
+                    @*<div class="container col-md-12">
+                        <div class="col-md-12">
+                            @Html.LabelFor(model => model.About)
+                            @Html.TextAreaFor(model => model.About, new { @class = "form-control", rows = "2", style = "max-width: 100%", id = "txtAbout" })
+                        </div>
+                    </div>*@
+                </div>
+                <div class="modal-footer">
+                    <div class="container col-md-12">
+                        <div class="col-md-12">
+                            <button id="btnSave" type="button" class="btn btn-success">Save</button> &nbsp;
+                            <button id="btnClose" type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<form id="formUserSearch">
+    <div class="col-md-12">
+        <div class="row col-md-2">
+            @Html.LabelFor(model => model.NameSearch)
+        </div>
+        <div class="row col-md-4">
+            @Html.TextBoxFor(model => model.NameSearch, new { @class = "form-control", id = "txtNameSearch" })
+        </div>
+        <div class="row col-md-4">
+            <div class="row col-md-4">
+                <button id="btnSearch" type="button" class="btn btn-danger btn-block">Search</button>
+            </div>
+        </div>
+    </div>
+</form>
+<div style="margin-top: 20px"></div>
+<div id="divLoadUserDetails">
+</div>
+<form id="formPerpage">
+    <div class="container col-md-12" style="text-align:right">
+        <label>Items Per Page:</label>
+        @Html.HiddenFor(model => model.Page, new { @id = "txtPage" })
+        @Html.DropDownListFor(model => model.PageSize, Model.PerPages(), new { id = "ddPerpages", @onchange = "ChagePaging()" })
+    </div>
+</form>
+
+

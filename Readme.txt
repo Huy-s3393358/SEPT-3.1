@@ -1,0 +1,1 @@
+This is a basic OBS system written with Entity Framework C#

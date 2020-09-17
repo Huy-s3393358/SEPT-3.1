@@ -1,0 +1,36 @@
+﻿body, td, p {
+    font-size: 14px;
+    font-family: Tahoma, Arial, Sans-serif;
+}
+
+input, button, select {
+    font-size: 14px;
+    padding: 5px;
+}
+
+.header {
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+.dialog form
+{
+	margin: 0px;
+}
+
+.message_info 
+{
+	/*background-color: #dc143c; */
+	background-color: Green;
+	color: White;
+}
+
+.message_warn 
+{
+	color: White;
+	background-color: #dc143c;
+}
+
+.space {
+    margin: 10px 0px;
+}

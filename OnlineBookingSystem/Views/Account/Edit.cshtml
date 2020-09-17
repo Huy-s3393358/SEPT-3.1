@@ -1,0 +1,133 @@
+﻿@model OnlineBookingSystem.ViewModel.UserViewModel
+@{
+    ViewBag.Title = "Edit";
+}
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+   var _webroot = '@System.Configuration.ConfigurationManager.AppSettings["webpath"].ToString()';
+    $(document).ready(function () {
+        $("#btnSave").click(function () {
+            //password
+            var passWord = true;
+            var vPassword = $("#txtPassWord").val() == undefined ? 0 : $("#txtPassWord").val().trim().length;
+            var vrePassword = $("#txtRePassWord").val() == undefined ? 0 : $("#txtPassWord").val().trim().length;
+            if (vPassword == 0 && vrePassword == 0) {
+                $("#txtPassWord").rules("remove", "required");
+            }
+            if (!$("#formUser").valid()) {
+                return;
+            }
+            SaveUserData()
+        });
+    });
+    
+    //Save User
+    function SaveUserData() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("Id", $("#txtUserId").val());
+        formData.append("RoleId", $("#ddRoleId").val());
+        formData.append("UserName", $("#txtUserName").val());
+        var vPassword = $("#txtPassWord").val() == undefined ? "" : $("#txtPassWord").val().trim();
+        formData.append("PassWord", vPassword);
+        formData.append("FullName", $("#txtFullName").val());
+        formData.append("Email", $("#txtEmail").val());
+        formData.append("PhoneNumber", $("#txtPhoneNumber").val());
+        formData.append("About", $("#txtAbout").val());
+        formData.append("Image", $("#UploadImage").get(0).files[0]);
+        $.ajax({
+            async: true,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            data: formData,
+            url: _webroot + '/Account/UpdateProfile',
+            success: function (data) {
+                    if (data.success === true) {
+                        alert(data.message);
+                    }
+
+                },
+            error: function () {
+                    alert('There is some problem to process your request. Please try after sometime.');
+                }
+            });
+    }
+    //show Image in UI
+    function DisplayImage(result) {
+        if (result.files && result.files[0]) {
+            var filereader = new FileReader;
+            filereader.onload = function (e) {
+                $("#imgUser").attr('src', e.target.result);
+            }
+            filereader.readAsDataURL(result.files[0]);
+        }
+
+}
+</script>
+<div style="margin-top: 30px"></div>
+<h2 style="font-size:25px">EDIT PROFILE</h2>
+<div style="margin-top: 20px"></div>
+<form id="formUser">
+    <div class="container col-md-12">
+        @Html.HiddenFor(model => model.Id, new { @id = "txtUserId" })
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.RoleId)
+            @Html.DropDownListFor(model => model.RoleId, Model.ListOfRole, new { @class = "form-control", @disabled = "disabled", id = "ddRoleId" })
+        </div>
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.UserName)
+            @Html.TextBoxFor(model => model.UserName, new { @class = "form-control", @disabled = "disabled", id = "txtUserName" })
+        </div>
+    </div>
+    <div class="container col-md-12">
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.PassWord)
+            @Html.PasswordFor(model => model.PassWord, new { @class = "form-control", id = "txtPassWord", @title = "Please enter a 3-10 character password." })
+            @Html.ValidationMessageFor(model => model.PassWord, null, new { @class = "text-danger" })
+        </div>
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.RePassWord)
+            @Html.PasswordFor(model => model.RePassWord, new { @class = "form-control", id = "txtRePassWord", @title = "Please enter Re-enter Password match with Password." })
+            @Html.ValidationMessageFor(model => model.RePassWord, null, new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="container col-md-12">
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.FullName)
+            @Html.TextBoxFor(model => model.FullName, new { @class = "form-control", id = "txtFullName", @title = "Please enter the user's full name in the format First name <space> Last name" })
+            @Html.ValidationMessageFor(model => model.FullName, null, new { @class = "text-danger" })
+        </div>
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.Email)
+            @Html.TextBoxFor(model => model.Email, new { @class = "form-control", id = "txtEmail", @title = "Please enter a valid email address." })
+            @Html.ValidationMessageFor(model => model.Email, null, new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="container col-md-12">
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.PhoneNumber)
+            @Html.TextBoxFor(model => model.PhoneNumber, new { @class = "form-control", id = "txtPhoneNumber", @title = "Please enter valid phone number." })
+            @Html.ValidationMessageFor(model => model.PhoneNumber, null, new { @class = "text-danger" })
+        </div>
+        <div class="form-group col-md-6">
+            @Html.LabelFor(model => model.Image)
+            <input type="file" id="UploadImage" class="form-control" name="userImage" title="Load Image" onchange="DisplayImage(this)" />
+            <img id="imgUser" src="@Model.imgUser" height="100" width="100" style="border:solid" />
+        </div>
+    </div>
+    <div class="container col-md-12">
+        <div class="col-md-12">
+            @Html.LabelFor(model => model.About)
+            @Html.TextAreaFor(model => model.About, new { @class = "form-control", rows = "2", style = "max-width: 100%", id = "txtAbout", @title = "Please write a short description about yourself." })
+        </div>
+    </div>
+    <div class="container col-md-12">
+        <div class="col-md-12">
+            <button id="btnSave" type="button" class="btn btn-success">Update Profile</button>
+        </div>
+    </div>
+</form>
+
+

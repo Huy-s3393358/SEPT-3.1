@@ -1,0 +1,214 @@
+﻿@model OnlineBookingSystem.ViewModel.BookingViewModel
+@{
+    ViewBag.Title = "Index";
+
+}
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src=@Url.Content("~/Scripts/jquery-ui-1.12.1.min.js")></script>
+<link href=@Url.Content("~/Content/themes/base/jquery-ui.min.css") rel="stylesheet" />
+<script type="text/javascript">
+    var _webroot = '@System.Configuration.ConfigurationManager.AppSettings["webpath"].ToString()';
+    $(document).ready(function () {
+        DataTimePicker();
+        SearchDateRooms();
+        $("#ddRoomTypeSearchId").change(function () {
+            var rType = 0
+            if ($("#ddRoomTypeSearchId").val())
+                rType = $("#ddRoomTypeSearchId").val();
+            console.log(rType);
+            $.ajax({
+                async: true,
+                type: 'GET',
+                dataType: 'JSON',
+                contentType: 'application/json; charset=utf-8',
+                data: { rType: rType },
+                url: _webroot + '/Booking/GetRoomWithRoomtype',
+                success: function (data) {
+                    $("#ddRoomSearchId").empty();
+                    $("#ddRoomSearchId").append("<option value= 0 > --Select Room-- </option >> <br />");
+                    $.each(data, function (index, row){
+                        $("#ddRoomSearchId").append("<option value='" + row.Value + "'>" + row.Text + "</option>");
+                    });
+                },
+                error: function () {
+                    alert('There is some proplem to process your request. Please try after sometime.')
+                }
+            });
+        });
+        $("#btnSave").click(function () {
+            //validate
+            if (!$("#formBooking").valid()) {
+                return;
+            }
+            SaveBookingData();
+        });
+        $("#btnSearch").click(function () {
+            $("#txtPage").val("1");
+            SearchDateRooms();
+        });
+
+    });
+    function SearchDateRooms() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("BookingDate", $("#dtBookingDate").val());
+        formData.append("RoomTypeSearchId", $("#ddRoomTypeSearchId").val());
+        formData.append("RoomSearchId", $("#ddRoomSearchId").val());
+        formData.append("Page", $("#txtPage").val());
+        formData.append("PageSize", $("#ddPerpages").val());
+        debugger;
+        $.ajax({
+            async: true,
+            type: 'POST',
+            url: _webroot + '/Booking/GetAllRooms',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                $("#divLoadRoomDetails").html(data);
+            },
+            error: function () {
+                alert('There is some problem to process your request. Please try after sometime.');
+            }
+        });
+    }
+    function DataTimePicker() {
+        $('.datepicker').datepicker({
+            dateFormat: 'dd-M-yy',
+            changeMonth: true,
+            changeYear: true,
+            showOn: 'button',
+            sideBySide: true,
+            controlType: 'select',
+            buttonText: '<span class="glyphicon glyphicon-calendar"></span>',
+            minDate: new Date()
+        });
+        $("#dtBookingDate").change(function () {
+
+        });
+    }
+
+    function LoadRoomDetails(bookingDate) {
+        $.ajax({
+            async: true,
+            data: 'POST',
+            dataType: 'HTML',
+            contentType: false,
+            processData: false,
+            url: _webroot + '/Booking/GetAllRooms',
+            data: { bookingDate: bookingDate },
+            success: function (data) {
+                $("#divLoadRoomDetails").html(data);
+            },
+            error: function () {
+                alert('There is some problem to process your request.');
+            }
+        });
+    }
+    function CreateBooking(Roomid, ddBookingHourID) {
+
+        $("#txtRoomId").val(Roomid);
+        $("#ddBookingHourID").val(ddBookingHourID);
+
+    }
+    function SaveBookingData() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("RoomId", $("#txtRoomId").val());
+        formData.append("BookingHourID", $("#ddBookingHourID").val());
+        formData.append("NumberOfMembers", $("#txtNumberOfMembers").val());
+        formData.append("BookingDate", $("#dtBookingDate").val());
+        $.ajax({
+            async: true,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                if (data.success === true) {
+                    alert(data.message);
+                    SearchDateRooms()
+                }
+
+            },
+            error: function () {
+                alert('There is some problem to process your request. Please try after sometime.');
+            }
+        });
+    }
+    //items per page
+    function ChagePaging() {
+        $("#txtPage").val("1");
+        SearchDateRooms();
+    }
+
+</script>
+<div style="margin-top:30px"></div>
+<h2 style="font-size:25px">BOOKING</h2>
+@Html.ActionLink("MY BOOKINGS", "Index", "RoomUsage", null, new { @class = "btn btn-large" })
+<div style="margin-top: 20px"></div>
+<form id="formBooking" >
+    <div id="divNewBooking" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">New Booking</h4>
+                </div>
+                <div class="modal-body col-md-12">
+                    <div class="container col-md-12">
+                        <div class="row col-md-12">
+                            <div class="form-group col-md-6">
+                                @Html.LabelFor(model => model.RoomId, new { @class = "control-label" })
+                                @Html.DropDownListFor(model => model.RoomId, Model.ListOfRooms, new { @class = "form-control", @disabled = "disabled", id = "txtRoomId" })
+                            </div>
+                            <div class="form-group col-md-6">
+                                @Html.LabelFor(model => model.BookingHourID, new { @class = "control-label" })
+                                @Html.DropDownListFor(model => model.BookingHourID, Model.ListBookingHours, new { @class = "form-control", @disabled = "disabled", id = "ddBookingHourID" })
+                                @Html.ValidationMessageFor(model => model.BookingHourID, null, new { @class = "text-danger" })
+                            </div>
+                            <div class="form-group col-md-6">
+                                @Html.LabelFor(model => model.NumberOfMembers, new { @class = "control-label" })
+                                @Html.TextBoxFor(model => model.NumberOfMembers, new { @class = "form-control", id = "txtNumberOfMembers" })
+                                @Html.ValidationMessageFor(model => model.NumberOfMembers, null, new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btnSave" type="button" class="btn btn-success">Save</button> &nbsp;
+                    <button type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<form id="formBookingSearch">
+    <div class="col-md-12">
+        <div class="row col-md-4">
+            @Html.DropDownListFor(model => model.RoomTypeSearchId, Model.ListOfRoomTypeSearch, "--Select Room Type--", new { @class = "form-control", id = "ddRoomTypeSearchId" })
+        </div>
+        <div class="row col-md-4">
+            @Html.DropDownListFor(model => model.RoomSearchId, Model.ListOfRoomSearch, "--Select Room--", new { @class = "form-control", id = "ddRoomSearchId" })
+        </div>
+        <div class="row col-md-1">
+            @Html.LabelFor(model => model.BookingDate)
+        </div>
+        <div class="row col-md-4">
+            @Html.EditorFor(model => model.BookingDate, new { htmlAttributes = new { Value = Model.BookingDate.ToString("dd-MMM-yyyy"), @class = "form-control datepicker", id = "dtBookingDate" } })
+        </div>
+        <div class="row col-md-4">
+            <button id="btnSearch" type="button" class="btn btn-danger btn-block">Search</button>
+        </div>
+    </div>
+</form>
+<div style="margin-top: 40px"></div>
+<div id="divLoadRoomDetails">
+</div>
+<form id="formPerpage">
+    <div class="container col-md-12" style="text-align:right">
+        <label>Items Per Page:</label>
+        @Html.HiddenFor(model => model.Page, new { @id = "txtPage" })
+        @Html.DropDownListFor(model => model.PageSize, Model.PerPages(), new { id = "ddPerpages", @onchange = "ChagePaging()" })
+    </div>
+</form>

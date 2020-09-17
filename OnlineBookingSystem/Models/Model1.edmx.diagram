@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="1ddf9a5e6dbf4a9180b53d27e99bae38" Name="Diagram1" ZoomLevel="84">
+        <EntityTypeShape EntityType="BookingDBModel.Role" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.Room" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.RoomType" Width="1.5" PointX="0.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.RoomUsage" Width="1.5" PointX="2.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.sysdiagram" Width="1.5" PointX="4.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.User" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BookingDBModel.BookingHour" Width="1.5" PointX="5.375" PointY="6.75" />
+        <AssociationConnector Association="BookingDBModel.fk_User_Role" />
+        <AssociationConnector Association="BookingDBModel.fk_RoomUsages_BookingHours" />
+        <AssociationConnector Association="BookingDBModel.fk_Rooms_RoomTypes" />
+        <AssociationConnector Association="BookingDBModel.fk_RoomUsages_Rooms" />
+        <AssociationConnector Association="BookingDBModel.fk_RoomUsages_Users" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

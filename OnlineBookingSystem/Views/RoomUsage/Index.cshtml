@@ -1,0 +1,81 @@
+﻿@model OnlineBookingSystem.ViewModel.RoomUsageDetailsViewModel
+@{
+    ViewBag.Title = "Index";
+}
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+<link href="~/Content/themes/base/jquery-ui.min.css" rel="stylesheet" />
+<script type="text/javascript">
+    var _webroot = '@System.Configuration.ConfigurationManager.AppSettings["webpath"].ToString()';
+
+    $(document).ready(function () {
+        LoadBookingHistoryDetails();
+    });
+    function DeleteRoomUsage(roomUsageId) {
+        //show warning
+        var result = confirm("Are you sure you want to delete?");
+        debugger;
+        if (result === false) {
+            return false;
+        }
+        $.ajax({
+            async: true,
+            type: 'GET',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: { roomUsageId: roomUsageId },
+            url: _webroot + '/RoomUsage/DeleteRoomUsageDetails',
+            success: function (data) {
+                if (data.success === true) {
+                    alert(data.message);
+                    LoadBookingHistoryDetails();
+                }
+            },
+            error: function () {
+                alert('There is some proplem to process your request.  Please try after sometime.')
+            }
+        });
+    }
+    function LoadBookingHistoryDetails() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("Page", $("#txtPage").val());
+        formData.append("PageSize", $("#ddPerpages").val());
+        $.ajax({
+            async: true,
+            type: 'POST',
+            dataType: 'HTML',
+            contentType: false,
+            processData: false,
+            data: formData,
+            url: _webroot + '/RoomUsage/GetAllBookingHistory',
+            success: function (data) {
+                $("#divBookingHistory").html(data);
+            },
+            error: function () {
+                alert('There is some problem to process your request.');
+            }
+        });
+    }
+    //items per page
+    function ChagePaging() {
+        $("#txtPage").val("1");
+        LoadBookingHistoryDetails();
+    }
+
+</script>
+<div>
+    <div style="margin-top: 30px"></div>
+    <h2 style="font-size:25px">MY BOOKINGS</h2>
+    @Html.ActionLink("New Booking", "Index", "Booking", null, new { @class = "btn btn-primary btn-large" })
+</div>
+<div style="margin-top: 30px"></div>
+<div id="divBookingHistory">
+</div>
+<form id="formPerpage">
+    <div class="container col-md-12" style="text-align:right">
+        <label>Items Per Page:</label>
+        @Html.HiddenFor(model => model.Page, new { @id = "txtPage" })
+        @Html.DropDownListFor(model => model.PageSize, Model.PerPages(), new { id = "ddPerpages", @onchange = "ChagePaging()" })
+    </div>
+</form>

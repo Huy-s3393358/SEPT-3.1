@@ -1,0 +1,238 @@
+﻿@model OnlineBookingSystem.ViewModel.RoomViewModel
+@{
+    ViewBag.Title = "Index";
+}
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script type="text/javascript">
+    var _webroot = '@System.Configuration.ConfigurationManager.AppSettings["webpath"].ToString()';
+    $(document).ready(function () {
+        SearchRoomsByType();
+        $("#btnSearch").click(function () {
+            $("#txtPage").val("1");
+            SearchRoomsByType();
+        });
+        //load times it will get that zero
+        $("#txtRoomId").val("0");
+        $("#btnSave").click(function () {
+            //validate
+            if (!$("#formRoom").valid()) {
+                return;
+            }
+            SaveRoomData();
+        });
+        $("#btnClose").click(function () {
+            ResetRoomInformation();
+        });
+     });
+    function SearchRoomsByType() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("RoomTypeSearchId", $("#ddRoomTypeSearchId").val());
+        formData.append("Page", $("#txtPage").val());
+        formData.append("PageSize", $("#ddPerpages").val());
+        $.ajax({
+            async: true,
+                type: 'POST',
+                url: _webroot + '/Room/GetAllRooms',
+                contentType: false,
+                processData: false,
+                data: formData,
+                success: function (data) {
+                    $("#divLoadRoomDetails").html(data);
+                },
+                error: function () {
+                    alert('There is some problem to process your request. Please try after sometime.');
+                }
+            });
+    }
+
+    //Save Room
+    function SaveRoomData() {
+        var formData = new FormData;
+        //Get data from Form
+        formData.append("Id", $("#txtRoomId").val());
+        formData.append("RoomTypeId", $("#ddRoomTypeId").val());
+        formData.append("RoomNumber", $("#txtRoomNumber").val());
+        formData.append("RoomPrice", $("#txtRoomPrice").val());
+        formData.append("RoomCapacity", $("#txtRoomCapacity").val());
+        formData.append("RoomDescription", $("#txtRoomDescription").val());
+        formData.append("StudentsNotAllowed", $('#ChkStudentsNotAllowed').is(":checked"));
+        $.ajax({
+            async: true,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (data) {
+                    if (data.success === true) {
+                        alert(data.message);
+                        ResetRoomInformation();
+                        SearchRoomsByType();
+                    }
+
+                },
+            error: function () {
+                    alert('There is some problem to process your request. Please try after sometime.');
+                }
+            });
+    }
+    //Edit Room
+    function EditRoom(roomId) {
+        $.ajax({
+            async: true,
+            type: 'GET',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: { roomId: roomId },
+            url: _webroot + '/Room/EditRoomDetails',
+            success: function (data) {
+                $("#ddRoomTypeId").val(data.RoomTypeid);
+                $("#txtRoomNumber").val(data.RoomNumber);
+                $("#txtRoomPrice").val(data.RoomPrice);
+                $("#txtRoomCapacity").val(data.RoomCapacity);
+                $("#txtRoomDescription").val(data.RoomDescription);
+                $("#divAddRoom").modal({ show: true });
+                $("#btnSave").text("Update");
+                $("#txtRoomId").val(data.Id);
+                $('#ChkStudentsNotAllowed').prop('checked', data.StudentsNotAllowed);
+                },
+            error: function () {
+                    alert('There is some proplem to process your request. Please try after sometime.')
+            }
+        });
+    }
+    //Delete Room
+    function DeleteRoom(roomId) {
+        //show warning
+        var result = confirm("Are you sure you want to delete?");
+        if (result === false) {
+            return false;
+        }
+        $.ajax({
+            async: true,
+            type: 'GET',
+            dataType: 'JSON',
+            contentType: 'application/json; charset=utf-8',
+            data: { roomId: roomId },
+            url: _webroot+ '/Room/DeleteRoomDetails',
+            success: function (data) {
+                    if (data.success === true) {
+                        alert(data.message);
+                        SearchRoomsByType();
+                    }
+                },
+            error: function () {
+                    alert('There is some proplem to process your request. Please try after sometime.')
+            }
+        });
+    }
+    //Hidden Students Not Allowed
+    function HiddenStudentsNotAllowed(value) {
+        if (value == 1) {
+            $('#ChkStudentsNotAllowed').prop("disabled", false);
+            $('#ChkStudentsNotAllowed').prop("checked", false);
+        }
+        else {
+            $('#ChkStudentsNotAllowed').prop("disabled", true);
+            $('#ChkStudentsNotAllowed').prop("checked", false);
+        }
+
+    }
+    //Reset all infor for Room form
+    function ResetRoomInformation() {
+        $("#ddRoomTypeId").val(1);
+        $("#txtRoomNumber").val('')
+        $("#txtRoomPrice").val('');
+        $("#txtRoomCapacity").val('');
+        $("#txtRoomDescription").val('');
+        $("#btnSave").text("Save")
+        $("#txtRoomId").val(0);
+        $('#ChkStudentsNotAllowed').prop('checked', false);
+    }
+    //items per page
+    function ChagePaging() {
+        $("#txtPage").val("1");
+        SearchRoomsByType();
+    }
+</script>
+<div>
+    <div style="margin-top: 30px"></div>
+    <h2 style="font-size:25px">CREATE ROOMS</h2>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#divAddRoom">Create New Room</button>
+    <div style="margin-top: 20px"></div>
+</div>
+<form id="formRoom">
+    <div id="divAddRoom" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Room</h4>
+                </div>
+                <div class="modal-body col-md-12">
+                    <div class="container col-md-12">
+                        @Html.HiddenFor(model => model.Id, new { @id = "txtRoomId" })
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RoomTypeId)
+                            @Html.DropDownListFor(model => model.RoomTypeId, Model.ListOfRoomType, new { @class = "form-control", id = "ddRoomTypeId", @onchange = "HiddenStudentsNotAllowed(this.value)" ,@title= "Please select the room type you want to create."})
+                                                       @Html.CheckBoxFor(model => model.StudentsNotAllowed, new { id = "ChkStudentsNotAllowed" })
+                            <label style="font-display:inherit;font-size:10px">Students are not allowed to book this room.</label>
+                        </div>
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RoomNumber)
+                            @Html.TextBoxFor(model => model.RoomNumber, new { @class = "form-control", id = "txtRoomNumber", @title = "Please enter the name for this room that you want users to see." })
+                                                        @Html.ValidationMessageFor(model => model.RoomNumber, null, new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="container col-md-12">
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RoomPrice)
+                            @Html.TextBoxFor(model => model.RoomPrice, new { @class = "form-control", id = "txtRoomPrice", @title = "Please enter the booking price for this room. Input 0 for free entry." })
+                                                        @Html.ValidationMessageFor(model => model.RoomPrice, null, new { @class = "text-danger" })
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            @Html.LabelFor(model => model.RoomCapacity)
+                            @Html.TextBoxFor(model => model.RoomCapacity, new { @class = "form-control", id = "txtRoomCapacity", @title = "Please enter the max number of seats available for this room." })
+                                                        @Html.ValidationMessageFor(model => model.RoomCapacity, null, new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="container col-md-12">
+                        <div class="col-md-12">
+                            @Html.LabelFor(model => model.RoomDescription)
+                            @Html.TextAreaFor(model => model.RoomDescription, new { @class = "form-control", rows = "2", style = "max-width: 100%", id = "txtRoomDescription", @title = "Please write a short introduction for this room." })
+                                                </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="container col-md-12">
+                        <div class="col-md-12">
+                            <button id="btnSave" type="button" class="btn btn-success">Save</button> &nbsp;
+                            <button id="btnClose" type="button" data-dismiss="modal" class="btn btn-danger">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<form id="formRoomSearch">
+    <div class="col-md-12">
+        <div class="row col-md-4">
+            @Html.DropDownListFor(model => model.RoomTypeSearchId, Model.ListOfRoomTypeSearch, "--Select Room Type--", new { @class = "form-control", id = "ddRoomTypeSearchId" })
+        </div>
+        <div class="row col-md-2">
+            <button id="btnSearch" type="button" class="btn btn-danger btn-block">Search</button>
+        </div>
+    </div>
+</form>
+<div style="margin-top: 20px"></div>
+<div id="divLoadRoomDetails">
+</div>
+<form id="formPerpage">
+    <div class="container col-md-12" style="text-align:right">
+        <label>Items Per Page:</label>
+        @Html.HiddenFor(model => model.Page, new { @id = "txtPage" })
+        @Html.DropDownListFor(model => model.PageSize, Model.PerPages(), new { id = "ddPerpages", @onchange = "ChagePaging()" })
+    </div>
+</form>

@@ -1,0 +1,64 @@
+﻿@model PagedList.IPagedList<OnlineBookingSystem.ViewModel.RoomDetailsViewModel>
+@using PagedList.Mvc;
+<table class="table table-bordred table-striped" style="width:100%">
+    <thead>
+        <tr>
+            <th>
+                Action
+            </th>
+            <th>
+                Room No.
+            </th>
+            <th>
+                Room Price
+            </th>
+            <th>
+                Room Type
+            </th>
+            <th>
+                Students Not Allowed
+            </th>
+            <th>
+                Room Capacity
+            </th>
+            <th>
+                Room Description
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <span id="btnDelete" class="glyphicon glyphicon-trash" onclick="DeleteRoom(@item.Id)"></span> &nbsp;&nbsp;
+                    <span id="btnEdit" class="glyphicon glyphicon-pencil" onclick="EditRoom(@item.Id)"></span> &nbsp;&nbsp;
+                </td>
+                <td>
+                    @item.RoomNumber
+                </td>
+                <td>
+                    @item.RoomPrice
+                </td>
+                <td>
+                    @item.RoomType
+                </td>
+                <td>
+                    @item.StudentsNotAllowed
+                </td>
+                <td>
+                    @item.RoomCapacity
+                </td>
+                <td>
+                    @item.RoomDescription
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@{
+    if (Model.PageCount > 1)
+    {
+        <div class="container col-md-12" style="text-align:right">@Html.PagedListPager(Model, page => Url.Action("Index", new { page, RoomTypeSearch = ViewBag.RoomTypeSearch, pageSize = ViewBag.PageSize }))</div>
+    }
+}

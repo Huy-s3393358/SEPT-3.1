@@ -1,0 +1,64 @@
+﻿@model PagedList.IPagedList<OnlineBookingSystem.ViewModel.RoomUsageDetailsViewModel>
+@using PagedList.Mvc;
+<table class="table table-bordred table-striped" style="width:100%">
+    <thead>
+        <tr>
+            <th>
+                Action
+            </th>
+            <th>
+                Room
+            </th>
+            <th>
+                User Name
+            </th>
+            <th>
+                Booking Date
+            </th>
+            <th>
+                Booking Hours
+            </th>
+            <th>
+                Number Of Members
+            </th>
+            <th>
+                Total Amount
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <span id="btnDelete" class="glyphicon glyphicon-trash" onclick="DeleteRoomUsage(@item.Id)"></span> &nbsp;&nbsp;
+                </td>
+                <td>
+                    @item.Room
+                </td>
+                <td>
+                    @item.User
+                </td>
+                <td>
+                    @item.BookingDate.ToString("dd-MMM-yyyy")
+                </td>
+                <td>
+                    @item.BookingHours
+                </td>
+                <td>
+                    @item.NumberOfMembers
+                </td>
+                <td>
+                    @item.TotalAmount
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+@{
+    if (Model.PageCount > 1)
+    {
+        <div class="container col-md-12" style="text-align:right">@Html.PagedListPager(Model, page => Url.Action("Index", new { page, pageSize = ViewBag.PageSize }))</div>
+    }
+}
